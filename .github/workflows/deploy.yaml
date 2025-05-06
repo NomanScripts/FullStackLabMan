@@ -1,0 +1,41 @@
+name: Deploy Frontend to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+
+      - name: Add EC2 host to known_hosts
+        run: |
+          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Install dependencies and build frontend
+        working-directory: ./frontend
+        run: |
+          npm install
+          npm run build
+
+      - name: Upload frontend build to EC2
+        working-directory: ./frontend
+        run: |
+          scp -i ~/.ssh/id_rsa -r ./dist ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/frontend/
+
+      - name: Restart Nginx on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} \
+            "sudo systemctl restart nginx && echo 'Nginx restarted'"
