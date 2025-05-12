@@ -8,7 +8,7 @@ import { login } from "../AuthService";
 import { EyeIcon, EyeSlashIcon } from "@heroicons/react/24/outline";
 import { HandThumbUpIcon } from "@heroicons/react/24/outline";
 import { AlertCircle } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../../assets/images/logo.png";
 import googleIcon from "../../../assets/images/google-icon.png";

@@ -6,9 +6,7 @@ export interface User {
   mobile: string;
 }
 
-interface StoredUsers {
-  [email: string]: User;
-}
+
 
 export const signup = async (
   email: string,
