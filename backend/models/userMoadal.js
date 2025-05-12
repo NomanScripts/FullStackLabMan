@@ -28,6 +28,7 @@ var userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    // Remove confirmPassword from schema so it is not saved in DB
     role: {
       type: String,
       default: "user",
@@ -68,6 +69,25 @@ var userSchema = new mongoose.Schema(
   }
 );
 
+// Add a virtual field for confirmPassword (not persisted in DB)
+userSchema.virtual("confirmPassword")
+  .get(function () {
+    return this._confirmPassword;
+  })
+  .set(function (value) {
+    this._confirmPassword = value;
+  });
+
+// Validate that password and confirmPassword match before saving
+userSchema.pre("validate", function (next) {
+  if (this.isModified("password")) {
+    if (this._confirmPassword !== this.password) {
+      this.invalidate("confirmPassword", "Passwords do not match");
+    }
+  }
+  next();
+});
+
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     const saltValue = await bcrypt.genSalt(10);
@@ -81,7 +101,8 @@ userSchema.methods.isPasswordMatch = async function (enteredPassword) {
 };
 userSchema.set("toJSON", {
   transform: (doc, ret) => {
-    delete ret.password; // Remove password from response
+    delete ret.password;
+    delete ret.confirmPassword;
     return ret;
   },
 });

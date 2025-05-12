@@ -25,24 +25,25 @@ const Login = () => {
   const [alertMessage, setAlertMessage] = useState("");
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (showAlert) {
-      const timer = setTimeout(() => {
-        setShowAlert(false);
-        if (alertMessage === "Login Successful!") {
-          navigate("/dashboard");
-        }
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [showAlert, alertMessage, navigate]);
+  // useEffect(() => {
+  //   if (showAlert) {
+  //     const timer = setTimeout(() => {
+  //       setShowAlert(false);
+  //       if (alertMessage === "Login Successful!") {
+  //         navigate("/dashboard");
+  //       }
+  //     }, 2000);
+  //     return () => clearTimeout(timer);
+  //   }
+  // }, [showAlert, alertMessage, navigate]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (login(email, password)) {
+    const result = await login(email, password);
+    if (result) {
       setAlertMessage("Login Successful!");
       setShowAlert(true);
+      navigate("/dashboard");
     } else {
       setAlertMessage("Invalid Credentials");
       setShowAlert(true);

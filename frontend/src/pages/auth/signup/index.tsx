@@ -23,7 +23,7 @@ const Signup = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const [alertMessage, setAlertMessage] = useState("");
-
+  const [phoneNumber, setPhoneNumber] = useState("");
   useEffect(() => {
     if (showAlert) {
       const timer = setTimeout(() => {
@@ -44,7 +44,7 @@ const Signup = () => {
     setShowConfirmPassword(!showConfirmPassword);
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (password !== confirmPassword) {
@@ -53,7 +53,7 @@ const Signup = () => {
       return;
     }
 
-    if (signup(email, password, firstName, lastName)) {
+    if (await signup(email, password, firstName, lastName, phoneNumber)) {
       setAlertMessage("Signup Successful!");
       setShowAlert(true);
     } else {
@@ -157,7 +157,24 @@ const Signup = () => {
                       className="mt-1 block w-full rounded border border-gray-300 px-4 py-3 text-dark-100 placeholder-gray-400 focus:border-primaryOrange-100 focus:outline-none xs:text-xs"
                     />
                   </div>
-
+                  <div>
+                    <label
+                      htmlFor="phoneNumber"
+                      className="block text-sm font-medium text-dark-100 xs:text-xs"
+                    >
+                      Phone Number <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      id="phoneNumber"
+                      name="phoneNumber"
+                      type="text"
+                      required
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      placeholder="Enter your phone number here"
+                      className="mt-1 block w-full rounded border border-gray-300 px-4 py-3 text-dark-100 placeholder-gray-400 focus:border-primaryOrange-100 focus:outline-none xs:text-xs"
+                    />
+                  </div>
                   <div>
                     <label
                       htmlFor="password"

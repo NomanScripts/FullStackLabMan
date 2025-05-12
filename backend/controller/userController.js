@@ -43,8 +43,8 @@ exports.loginUser = catchAsyncErrors(async (req, res, next) => {
     });
     res.json({
       _id: findUser.id,
-      firstname: findUser.firstname,
-      lastname: findUser.lastname,
+      firstName: findUser.firstname,
+      lastName: findUser.lastname,
       email: findUser.email,
       mobile: findUser.mobile,
       token: genratejwtToken(findUser.id),

@@ -34,6 +34,7 @@ const filtersSlice = createSlice({
       state.xp = action.payload;
     },
   },
+
 });
 
 export const { toggleFilter, clearFilters, setXpFilter } = filtersSlice.actions;
