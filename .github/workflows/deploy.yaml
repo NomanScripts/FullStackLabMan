@@ -31,11 +31,18 @@ jobs:
           npm install
           npm run build
 
+      - name: Remove old frontend dist on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
+            sudo rm -rf /home/ubuntu/FullStackLabMan/frontend &&
+            mkdir -p /home/ubuntu/FullStackLabMan/frontend
+          "
+
       - name: Upload frontend build to EC2
         run: |
-          scp -i ~/.ssh/id_rsa -r ./frontend/dist ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/frontend/
+          scp -i ~/.ssh/id_rsa -r ./frontend/dist/* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/frontend/
 
-      - name: Fix frontend permissions and reload NGINX
+      - name: Fix frontend permissions and restart NGINX
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
             sudo chown -R www-data:www-data /home/ubuntu/FullStackLabMan/frontend &&
@@ -43,7 +50,6 @@ jobs:
             sudo chmod +x /home /home/ubuntu /home/ubuntu/FullStackLabMan /home/ubuntu/FullStackLabMan/frontend &&
             sudo systemctl reload nginx
           "
-
       # ---------- BACKEND ----------
       - name: Upload backend code to EC2
         run: |
