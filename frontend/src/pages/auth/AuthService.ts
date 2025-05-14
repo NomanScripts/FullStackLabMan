@@ -24,7 +24,7 @@ export const signup = async (
     confirmPassword: password, // match Postman format
   });
 
-  const response = await fetch("http://localhost:5000/api/user/register", {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded"
@@ -44,7 +44,7 @@ export const signup = async (
 
 
 export const login = async (email: string, password: string): Promise<boolean> => {
-  const response = await fetch("http://localhost:5000/api/user/login", {
+  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/login`, {
     method: "POST",
     body: JSON.stringify({ email, password }),
     headers: {
