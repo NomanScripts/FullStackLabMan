@@ -31,18 +31,11 @@ jobs:
           npm install
           npm run build
 
-      - name: Remove old frontend dist on EC2
-        run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
-            sudo rm -rf /home/ubuntu/FullStackLabMan/frontend &&
-            mkdir -p /home/ubuntu/FullStackLabMan/frontend
-          "
-
       - name: Upload frontend build to EC2
         run: |
-          scp -i ~/.ssh/id_rsa -r ./frontend/dist/* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/frontend/
+          scp -i ~/.ssh/id_rsa -r ./frontend/dist ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/frontend/
 
-      - name: Fix frontend permissions and restart NGINX
+      - name: Fix frontend permissions and reload NGINX
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
             sudo chown -R www-data:www-data /home/ubuntu/FullStackLabMan/frontend &&
@@ -56,10 +49,11 @@ jobs:
         run: |
           scp -i ~/.ssh/id_rsa -r ./backend ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/
 
-      - name: Restart PM2 backend (index.js)
+      - name: Install backend dependencies and restart PM2
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
             cd /home/ubuntu/FullStackLabMan/backend &&
-            pm2 restart index || pm2 start index.js --name index &&
-            pm2 save
+            npm install &&
+            pm2 delete index || true &&
+            pm2 start index.js --name index
           "
