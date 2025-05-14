@@ -31,18 +31,34 @@ jobs:
           npm install
           npm run build
 
+      - name: Remove old frontend dist on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
+            sudo rm -rf /home/ubuntu/FullStackLabMan/frontend &&
+            mkdir -p /home/ubuntu/FullStackLabMan/frontend
+          "
+
       - name: Upload frontend build to EC2
         run: |
-          scp -i ~/.ssh/id_rsa -r ./frontend/dist ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/frontend/
+          scp -i ~/.ssh/id_rsa -r ./frontend/dist/* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/frontend/
 
-      - name: Restart Nginx on EC2
+      - name: Fix frontend permissions and restart NGINX
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo systemctl restart nginx"
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
+            sudo chown -R www-data:www-data /home/ubuntu/FullStackLabMan/frontend &&
+            sudo chmod -R 755 /home/ubuntu/FullStackLabMan/frontend &&
+            sudo chmod +x /home /home/ubuntu /home/ubuntu/FullStackLabMan /home/ubuntu/FullStackLabMan/frontend &&
+            sudo systemctl reload nginx
+          "
 
       # ---------- BACKEND ----------
       - name: Upload backend code to EC2
         run: |
-          scp -i ~/.ssh/id_rsa -r ./backend ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
+            rm -rf /home/ubuntu/FullStackLabMan/backend &&
+            mkdir -p /home/ubuntu/FullStackLabMan/backend
+          "
+          scp -i ~/.ssh/id_rsa -r ./backend/* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/backend/
 
       - name: Restart PM2 backend app
         run: |
