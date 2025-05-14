@@ -46,7 +46,7 @@ jobs:
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
             sudo mkdir -p /home/ubuntu/FullStackLabMan/frontend/dist &&
-            sudo chown -R $USER:$USER /home/ubuntu/FullStackLabMan/frontend &&
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/FullStackLabMan/frontend &&
             sudo chmod -R 755 /home/ubuntu/FullStackLabMan/frontend
           "
           scp -i ~/.ssh/id_rsa -r ./frontend/dist/* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/frontend/dist/
