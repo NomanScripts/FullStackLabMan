@@ -35,7 +35,7 @@ const server = app.listen(PORT, () => {
   console.log(`Server is running at PORT ${PORT}`);
 });
 app.get("/", (req, res) => {
-  res.send("Hello World");
+  res.send("Hello World with new changes");
 });
 process.on("uncaughtException", (err) => {
   console.log(`Error: ${err.message}`);

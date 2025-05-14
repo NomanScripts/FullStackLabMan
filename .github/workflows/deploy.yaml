@@ -54,15 +54,12 @@ jobs:
       # ---------- BACKEND ----------
       - name: Upload backend code to EC2
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
-            rm -rf /home/ubuntu/FullStackLabMan/backend &&
-            mkdir -p /home/ubuntu/FullStackLabMan/backend
-          "
-          scp -i ~/.ssh/id_rsa -r ./backend/* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/backend/
+          scp -i ~/.ssh/id_rsa -r ./backend ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/
 
-      - name: Restart PM2 backend app
+      - name: Restart PM2 backend (index.js)
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
             cd /home/ubuntu/FullStackLabMan/backend &&
-            pm2 restart backend-app || pm2 start index.js --name backend-app
+            pm2 restart index || pm2 start index.js --name index &&
+            pm2 save
           "
