@@ -31,9 +31,16 @@ jobs:
           npm install
           npm run build
 
+      - name: Fix directory execute permissions for frontend path
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo chmod +x /home"
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo chmod +x /home/ubuntu"
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo chmod +x /home/ubuntu/FullStackLabMan"
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo chmod +x /home/ubuntu/FullStackLabMan/frontend"
+
       - name: Replace dist folder in EC2 frontend directory
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "rm -rf /home/ubuntu/FullStackLabMan/frontend/dist"
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo rm -rf /home/ubuntu/FullStackLabMan/frontend/dist"
           scp -i ~/.ssh/id_rsa -r ./frontend/dist ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/frontend/
 
       - name: Fix frontend permissions and restart NGINX
@@ -41,7 +48,6 @@ jobs:
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
             sudo chown -R www-data:www-data /home/ubuntu/FullStackLabMan/frontend &&
             sudo chmod -R 755 /home/ubuntu/FullStackLabMan/frontend &&
-            sudo chmod +x /home /home/ubuntu /home/ubuntu/FullStackLabMan /home/ubuntu/FullStackLabMan/frontend &&
             sudo systemctl reload nginx
           "
 
