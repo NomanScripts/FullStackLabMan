@@ -38,9 +38,9 @@ jobs:
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo chmod +x /home/ubuntu/FullStackLabMan"
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo chmod +x /home/ubuntu/FullStackLabMan/frontend"
 
-      - name: Replace dist folder in EC2 frontend directory
+      - name: Replace dist folder in EC2 frontend directory (only if exists)
         run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo rm -rf /home/ubuntu/FullStackLabMan/frontend/dist"
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "[ -d /home/ubuntu/FullStackLabMan/frontend/dist ] && sudo rm -rf /home/ubuntu/FullStackLabMan/frontend/dist || echo 'No existing dist folder to delete'"
           scp -i ~/.ssh/id_rsa -r ./frontend/dist ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/frontend/
 
       - name: Fix frontend permissions and restart NGINX
