@@ -22,12 +22,12 @@ jobs:
 
       - name: 🧱 Build & Push Frontend Image
         run: |
-          docker build -t mian3434/labman-frontend ./frontend
+          docker build -t mian3434/labman-frontend -f frontend/Dockerfile ./frontend
           docker push mian3434/labman-frontend
 
       - name: 🧱 Build & Push Backend Image
         run: |
-          docker build -t mian3434/labman-backend ./backend
+          docker build -t mian3434/labman-backend -f backend/Dockerfile ./backend
           docker push mian3434/labman-backend
 
       - name: 🛠️ Setup SSH Access
