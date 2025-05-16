@@ -34,13 +34,10 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      - name: 📤 Upload `.env.production` and `nginx.conf` to EC2
+      - name: 📤 Upload `.env.production` to EC2
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "mkdir -p /home/ubuntu/FullStackLabMan/backend"
           scp -i ~/.ssh/id_rsa ./backend/.env.production ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/backend/.env.production
-
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "mkdir -p /home/ubuntu/FullStackLabMan/nginx"
-          scp -i ~/.ssh/id_rsa ./nginx/nginx.conf ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/nginx/nginx.conf
 
       - name: 🚀 Deploy via Docker Compose
         run: |
