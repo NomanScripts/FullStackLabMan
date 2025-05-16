@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  labmanfrontend:
+    image: mian3434/labman-frontend
+    container_name: labmanfrontend
+    restart: always
+    ports:
+      - "3000:80"

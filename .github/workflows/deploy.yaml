@@ -1,4 +1,4 @@
-name: Deploy FullStackLabMan (Frontend + Backend)
+name: Deploy FullStackLabMan (Dockerized)
 
 on:
   push:
@@ -7,67 +7,39 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to EC2
+    name: Build & Deploy to EC2 with Docker
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: 🔄 Checkout Code
         uses: actions/checkout@v3
 
-      - name: Set up SSH key
+      - name: 🔐 Login to Docker Hub
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: 🧱 Build & Push Frontend Image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/labman-frontend ./frontend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/labman-frontend
+
+      - name: 🧱 Build & Push Backend Image
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/labman-backend ./backend
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/labman-backend
+
+      - name: 🛠️ Setup SSH Access
         run: |
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-
-      - name: Add EC2 host to known_hosts
-        run: |
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
-      # ---------- FRONTEND ----------
-      - name: Install dependencies and build frontend
-        working-directory: ./frontend
-        run: |
-          npm install
-          npm run build
-
-      - name: Fix directory execute permissions for frontend path
-        run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo chmod +x /home"
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo chmod +x /home/ubuntu"
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo chmod +x /home/ubuntu/FullStackLabMan"
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "sudo chmod +x /home/ubuntu/FullStackLabMan/frontend"
-
-      - name: Ensure frontend directory exists on EC2
-        run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "mkdir -p /home/ubuntu/FullStackLabMan/frontend"
-
-      - name: Replace dist folder in EC2 frontend directory
+      - name: 🚀 Deploy via Docker Compose on EC2
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
-            sudo mkdir -p /home/ubuntu/FullStackLabMan/frontend/dist &&
-            sudo chown -R ubuntu:ubuntu /home/ubuntu/FullStackLabMan/frontend &&
-            sudo chmod -R 755 /home/ubuntu/FullStackLabMan/frontend
-          "
-          scp -i ~/.ssh/id_rsa -r ./frontend/dist/* ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/frontend/dist/
-
-      - name: Fix frontend permissions and restart NGINX
-        run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
-            sudo chown -R www-data:www-data /home/ubuntu/FullStackLabMan/frontend &&
-            sudo chmod -R 755 /home/ubuntu/FullStackLabMan/frontend &&
-            sudo systemctl reload nginx
-          "
-
-      # ---------- BACKEND ----------
-      - name: Upload backend code to EC2
-        run: |
-          scp -i ~/.ssh/id_rsa -r ./backend ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/
-
-      - name: Install backend dependencies and restart with PM2
-        run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
-            cd /home/ubuntu/FullStackLabMan/backend &&
-            npm install &&
-            pm2 start index.js --name index || pm2 restart index
+            cd /home/ubuntu/FullStackLabMan &&
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/labman-frontend &&
+            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/labman-backend &&
+            docker-compose -f docker-compose.prod.yml down &&
+            docker-compose -f docker-compose.prod.yml up -d --remove-orphans
           "

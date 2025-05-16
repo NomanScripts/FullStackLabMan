@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.git
+.gitignore
+.env.local
+.env.production
+.env
