@@ -34,12 +34,17 @@ jobs:
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
 
+      - name: 📤 Upload `.env.production` to backend folder on EC2
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "mkdir -p /home/ubuntu/FullStackLabMan/backend"
+          scp -i ~/.ssh/id_rsa ./backend/.env.production ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/backend/.env.production
+
       - name: 🚀 Deploy via Docker Compose on EC2
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
             cd /home/ubuntu/FullStackLabMan &&
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/labman-frontend &&
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/labman-backend &&
-            docker-compose -f docker-compose.yml down &&
-            docker-compose -f docker-compose.yml up -d --remove-orphans
+            docker-compose down &&
+            docker-compose up -d --remove-orphans
           "
