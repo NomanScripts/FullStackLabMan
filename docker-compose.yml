@@ -1,50 +1,49 @@
-name: Deploy FullStackLabMan (Dockerized)
+version: "3.8"
 
-on:
-  push:
-    branches:
-      - main
+services:
+  mongo:
+    image: mongo
+    container_name: mongodb
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: Noman
+      MONGO_INITDB_ROOT_PASSWORD: mian3434
+    volumes:
+      - mongo-data:/data/db
 
-jobs:
-  deploy:
-    name: Build & Deploy to EC2 with Docker
-    runs-on: ubuntu-latest
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: Noman
+      ME_CONFIG_MONGODB_ADMINPASSWORD: mian3434
+      ME_CONFIG_MONGODB_URL: mongodb://Noman:mian3434@mongo:27017/
+      ME_CONFIG_BASICAUTH: false
 
-    steps:
-      - name: 🔄 Checkout Code
-        uses: actions/checkout@v3
+  labmanbackend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: labmanbackend
+    restart: always
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mongo
+    env_file:
+      - ./backend/.env.local
 
-      - name: 🔐 Login to Docker Hub
-        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "mian3434" --password-stdin
+  labmanfrontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: labmanfrontend
+    restart: always
+    ports:
+      - "3000:80"
 
-      - name: 🧱 Build & Push Frontend Image
-        run: |
-          docker build -t mian3434/labman-frontend ./frontend
-          docker push mian3434/labman-frontend
-
-      - name: 🧱 Build & Push Backend Image
-        run: |
-          docker build -t mian3434/labman-backend ./backend
-          docker push mian3434/labman-backend
-
-      - name: 🛠️ Setup SSH Access
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.EC2_HOST }} >> ~/.ssh/known_hosts
-
-      - name: 📤 Upload `.env.production` to backend folder on EC2
-        run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "mkdir -p /home/ubuntu/FullStackLabMan/backend"
-          scp -i ~/.ssh/id_rsa ./backend/.env.production ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }}:/home/ubuntu/FullStackLabMan/backend/.env.production
-
-      - name: 🚀 Deploy via Docker Compose on EC2
-        run: |
-          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST }} "
-            cd /home/ubuntu/FullStackLabMan &&
-            docker pull mian3434/labman-frontend &&
-            docker pull mian3434/labman-backend &&
-            docker-compose down &&
-            docker-compose up -d --remove-orphans
-          "
+volumes:
+  mongo-data:
