@@ -1,5 +1,5 @@
 # ===========================
-# ✅ FINAL docker-compose.yml
+# ✅ FINAL docker-compose.yml (updated for Docker Hub deployment)
 # ===========================
 version: "3.8"
 
@@ -27,9 +27,7 @@ services:
       ME_CONFIG_BASICAUTH: false
 
   labmanbackend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: mian3434/labman-backend
     container_name: labmanbackend
     restart: always
     ports: [] # No external port, handled by NGINX
@@ -39,9 +37,7 @@ services:
       - ./backend/.env.production
 
   labmanfrontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: mian3434/labman-frontend
     container_name: labmanfrontend
     restart: always
     ports: [] # No external port, handled by NGINX
