@@ -40,6 +40,6 @@ jobs:
             cd /home/ubuntu/FullStackLabMan &&
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/labman-frontend &&
             docker pull ${{ secrets.DOCKERHUB_USERNAME }}/labman-backend &&
-            docker-compose -f docker-compose.prod.yml down &&
-            docker-compose -f docker-compose.prod.yml up -d --remove-orphans
+            docker-compose -f docker-compose.yml down &&
+            docker-compose -f docker-compose.yml up -d --remove-orphans
           "
