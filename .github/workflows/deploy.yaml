@@ -25,8 +25,8 @@ jobs:
 
       - name: 🔧 Prepare .env files
         run: |
-          echo "${{ secrets['FRONTEND_ENV_' + env.ENV_STAGE | upper] }}" > ./frontend/.env
-          echo "${{ secrets['BACKEND_ENV_' + env.ENV_STAGE | upper] }}" > ./backend/.env
+          echo "${{ secrets[format('FRONTEND_ENV_{0}', env.ENV_STAGE) | upper] }}" > ./frontend/.env
+          echo "${{ secrets[format('BACKEND_ENV_{0}', env.ENV_STAGE) | upper] }}" > ./backend/.env
 
       - name: 🧱 Build & Push Frontend Image
         run: |
