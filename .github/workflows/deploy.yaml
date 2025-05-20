@@ -1,5 +1,5 @@
 # ===========================
-# ✅ FINAL .github/workflows/deploy.yml (Multi-Environment Support)
+# ✅ FINAL .github/workflows/deploy.yml (Scoped Permission Fix for All Envs)
 # ===========================
 name: Deploy FullStackLabMan (Dockerized)
 
@@ -23,7 +23,7 @@ jobs:
       - name: 🔐 Login to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "mian3434" --password-stdin
 
-      # Inject correct .env for frontend based on ENV_STAGE
+      # Inject .env files
       - name: Inject frontend .env (dev)
         if: env.ENV_STAGE == 'dev'
         run: echo "${{ secrets.FRONTEND_ENV_DEV }}" > ./frontend/.env
@@ -36,7 +36,6 @@ jobs:
         if: env.ENV_STAGE == 'production'
         run: echo "${{ secrets.FRONTEND_ENV_PROD }}" > ./frontend/.env
 
-      # Inject correct .env for backend based on ENV_STAGE
       - name: Inject backend .env (dev)
         if: env.ENV_STAGE == 'dev'
         run: echo "${{ secrets.BACKEND_ENV_DEV }}" > ./backend/.env
@@ -64,16 +63,37 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          if [ "$ENV_STAGE" == "production" ]; then
-            ssh-keyscan -H "${{ secrets.EC2_HOST_PROD }}" >> ~/.ssh/known_hosts
-          elif [ "$ENV_STAGE" == "staging" ]; then
-            ssh-keyscan -H "${{ secrets.EC2_HOST_STAGING }}" >> ~/.ssh/known_hosts
-          else
-            ssh-keyscan -H "${{ secrets.EC2_HOST_DEV }}" >> ~/.ssh/known_hosts
-          fi
+          ssh-keyscan -H "${{ secrets.EC2_HOST_DEV }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.EC2_HOST_STAGING }}" >> ~/.ssh/known_hosts
+          ssh-keyscan -H "${{ secrets.EC2_HOST_PROD }}" >> ~/.ssh/known_hosts
 
-      # Upload files to correct EC2 host
-      - name: 📤 Upload .env and nginx.conf to EC2 (dev)
+      # ✅ Scoped fix: frontend folder only
+      - name: 🧰 Fix frontend permissions (dev)
+        if: env.ENV_STAGE == 'dev'
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_DEV }} "
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/FullStackLabMan/frontend &&
+            sudo chmod -R 755 /home/ubuntu/FullStackLabMan/frontend
+          "
+
+      - name: 🧰 Fix frontend permissions (staging)
+        if: env.ENV_STAGE == 'staging'
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_STAGING }} "
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/FullStackLabMan/frontend &&
+            sudo chmod -R 755 /home/ubuntu/FullStackLabMan/frontend
+          "
+
+      - name: 🧰 Fix frontend permissions (production)
+        if: env.ENV_STAGE == 'production'
+        run: |
+          ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_PROD }} "
+            sudo chown -R ubuntu:ubuntu /home/ubuntu/FullStackLabMan/frontend &&
+            sudo chmod -R 755 /home/ubuntu/FullStackLabMan/frontend
+          "
+
+      # 📤 Upload files
+      - name: Upload to EC2 (dev)
         if: env.ENV_STAGE == 'dev'
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_DEV }} "mkdir -p /home/ubuntu/FullStackLabMan/{backend,frontend,nginx}"
@@ -81,7 +101,7 @@ jobs:
           scp -i ~/.ssh/id_rsa ./frontend/.env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_DEV }}:/home/ubuntu/FullStackLabMan/frontend/.env
           scp -i ~/.ssh/id_rsa ./nginx/nginx.conf ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_DEV }}:/home/ubuntu/FullStackLabMan/nginx/nginx.conf
 
-      - name: 📤 Upload .env and nginx.conf to EC2 (staging)
+      - name: Upload to EC2 (staging)
         if: env.ENV_STAGE == 'staging'
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_STAGING }} "mkdir -p /home/ubuntu/FullStackLabMan/{backend,frontend,nginx}"
@@ -89,7 +109,7 @@ jobs:
           scp -i ~/.ssh/id_rsa ./frontend/.env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_STAGING }}:/home/ubuntu/FullStackLabMan/frontend/.env
           scp -i ~/.ssh/id_rsa ./nginx/nginx.conf ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_STAGING }}:/home/ubuntu/FullStackLabMan/nginx/nginx.conf
 
-      - name: 📤 Upload .env and nginx.conf to EC2 (production)
+      - name: Upload to EC2 (production)
         if: env.ENV_STAGE == 'production'
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_PROD }} "mkdir -p /home/ubuntu/FullStackLabMan/{backend,frontend,nginx}"
@@ -97,7 +117,8 @@ jobs:
           scp -i ~/.ssh/id_rsa ./frontend/.env ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_PROD }}:/home/ubuntu/FullStackLabMan/frontend/.env
           scp -i ~/.ssh/id_rsa ./nginx/nginx.conf ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_PROD }}:/home/ubuntu/FullStackLabMan/nginx/nginx.conf
 
-      - name: 🚀 Deploy via Docker Compose (dev)
+      # 🚀 Deploy via Docker Compose
+      - name: Deploy (dev)
         if: env.ENV_STAGE == 'dev'
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_DEV }} "
@@ -107,7 +128,7 @@ jobs:
             docker compose up -d --remove-orphans
           "
 
-      - name: 🚀 Deploy via Docker Compose (staging)
+      - name: Deploy (staging)
         if: env.ENV_STAGE == 'staging'
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_STAGING }} "
@@ -117,7 +138,7 @@ jobs:
             docker compose up -d --remove-orphans
           "
 
-      - name: 🚀 Deploy via Docker Compose (production)
+      - name: Deploy (production)
         if: env.ENV_STAGE == 'production'
         run: |
           ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_PROD }} "
@@ -127,14 +148,15 @@ jobs:
             docker compose up -d --remove-orphans
           "
 
-      - name: 🔄 Reload NGINX Inside Container (dev)
+      # 🔄 Reload NGINX
+      - name: Reload NGINX (dev)
         if: env.ENV_STAGE == 'dev'
         run: ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_DEV }} "docker exec nginx nginx -s reload || true"
 
-      - name: 🔄 Reload NGINX Inside Container (staging)
+      - name: Reload NGINX (staging)
         if: env.ENV_STAGE == 'staging'
         run: ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_STAGING }} "docker exec nginx nginx -s reload || true"
 
-      - name: 🔄 Reload NGINX Inside Container (production)
+      - name: Reload NGINX (production)
         if: env.ENV_STAGE == 'production'
         run: ssh -i ~/.ssh/id_rsa ${{ secrets.EC2_USERNAME }}@${{ secrets.EC2_HOST_PROD }} "docker exec nginx nginx -s reload || true"
