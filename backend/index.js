@@ -1,6 +1,6 @@
 const express = require("express");
 const dbConnect = require("./config/dbconnect");
-const dotenv = require("dotenv")
+const dotenv = require("dotenv").config();
 const authRouter = require("./routes/authRoute");
 const productRouter = require("./routes/productRoute");
 const blogRouter = require("./routes/blogRoute");
@@ -14,9 +14,6 @@ const morgan = require("morgan");
 const app = express();
 const cors = require("cors");
 const PORT = process.env.PORT || 4000;
-
-const env = process.env.NODE_ENV || "local";
-dotenv.config({ path: `.env.${env}` });
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

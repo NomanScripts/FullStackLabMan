@@ -1,3 +1,7 @@
+# =====================================
+# ✅ Backend Dockerfile (Node.js + dotenv)
+# =====================================
+
 # Use Node.js base image
 FROM node:18-alpine
 
@@ -8,11 +12,11 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install
 
-# Copy the rest of the app code
+# Copy rest of the code (including .env injected at build time)
 COPY . .
 
-# Expose port (adjust if your backend runs on a different port)
+# Expose backend API port
 EXPOSE 5000
 
-# Start the backend
+# Default start command
 CMD ["npm", "start"]
