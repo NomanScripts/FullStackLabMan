@@ -5,8 +5,7 @@ export interface User {
   password: string;
   mobile: string;
 }
-
-
+const baseUrl = import.meta.env.VITE_API_BASE_URL;
 
 export const signup = async (
   email: string,
@@ -24,9 +23,8 @@ export const signup = async (
     confirmPassword: password, // match Postman format
   });
 
-  const baseUrl = import.meta.env.VITE_API_BASE_URL;
   console.log("🚀 ~ baseUrl:", baseUrl)
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/register`, {
+  const response = await fetch(`${baseUrl}/user/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/x-www-form-urlencoded"
@@ -46,7 +44,7 @@ export const signup = async (
 
 
 export const login = async (email: string, password: string): Promise<boolean> => {
-  const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/login`, {
+  const response = await fetch(`${baseUrl}/user/login`, {
     method: "POST",
     body: JSON.stringify({ email, password }),
     headers: {
