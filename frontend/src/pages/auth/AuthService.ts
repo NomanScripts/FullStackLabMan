@@ -24,6 +24,8 @@ export const signup = async (
     confirmPassword: password, // match Postman format
   });
 
+  const baseUrl = import.meta.env.VITE_API_BASE_URL;
+  console.log("🚀 ~ baseUrl:", baseUrl)
   const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/user/register`, {
     method: "POST",
     headers: {
