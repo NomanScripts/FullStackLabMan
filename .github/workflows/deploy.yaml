@@ -1,5 +1,5 @@
 # ===========================
-# ✅ FINAL .github/workflows/deploy.yml (Branch-Based Multi-Environment Deployment)
+# ✅ FINAL .github/workflows/deploy.yml (Branch-Based Multi-Environment Deployment with Vite Env Fix)
 # ===========================
 name: Deploy FullStackLabMan (Dockerized)
 
@@ -24,7 +24,7 @@ jobs:
       - name: 🔐 Login to Docker Hub
         run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "mian3434" --password-stdin
 
-      # Inject .env files
+      # Inject .env files BEFORE build so Vite can read them
       - name: Inject frontend .env (dev)
         if: env.ENV_STAGE == 'dev'
         run: echo "${{ secrets.FRONTEND_ENV_DEV }}" > ./frontend/.env
@@ -49,6 +49,7 @@ jobs:
         if: env.ENV_STAGE == 'production'
         run: echo "${{ secrets.BACKEND_ENV_PROD }}" > ./backend/.env
 
+      # Build must occur after .env files are injected
       - name: 🧱 Build & Push Frontend Image
         run: |
           docker build -t mian3434/labman-frontend ./frontend
